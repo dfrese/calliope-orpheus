@@ -16,22 +16,27 @@
   (doseq [c (vec (array-seq (.-childNodes element)))]
     (.removeChild element c)))
 
-(def ^{:doc "Implementation of [[calliope.core/ICanvas]], to be passed
-  to [[calliope.core/app]], enabling the view of the application to
-  use the orpheus virtual dom library."}
-  canvas
-  (reify app/ICanvas
-    (normalize-view [this v] (->props v))
-    (init-canvas! [this element]
-      ;; try to lift the current dom structure as vdom properties (gives
-      ;; smooth first update if the html already matches the initial vdom)
-      (lift/lift-properties element))
-    (update-canvas! [this state element v msg-callback]
-      (patch/patch-properties! element state v
-                               {:dispatch! msg-callback}))
-    (finish-canvas! [this state element]
-      (patch/patch-properties! element state {}
-                               {}))))
+(defrecord ^:no-doc OrpheusCanvas
+  [view]
+  app/ICanvas
+  (init-canvas! [this element]
+    ;; try to lift the current dom structure as vdom properties (gives
+    ;; smooth first update if the html already matches the initial vdom)
+    (lift/lift-properties element))
+  (update-canvas! [this state element model msg-callback]
+    (patch/patch-properties! element state (->props (view model))
+                             {:dispatch! msg-callback}))
+  (finish-canvas! [this state element]
+    (patch/patch-properties! element state {}
+                             {})))
+
+(defn ^{:doc "Returns an implementation of [[calliope.core/ICanvas]],
+  to be passed to [[calliope.core/app]], enabling the view of the
+  application to use the orpheus virtual dom library. The `view`
+  function passed must take the application model, and return new
+  properties for the master dom element, or one or more virtual dom
+  elements to be used as the children of that."}  canvas [view]
+  (OrpheusCanvas. view))
 
 ;; (defn element [^js/Element element]
 ;;   element)
@@ -43,6 +48,9 @@
 ;;   (.-body document))
 
 (defn app "Defines a [[calliope/app]], whose view can use the orpheus
-  virtual dom library."
+  virtual dom library. The `view` function passed must take the
+  application model, and return new properties for the master dom
+  element, or one or more virtual dom elements to be used as the
+  children of that."
   [init view update subscriptions]
-  (app/app canvas init view update subscriptions))
+  (app/app (canvas view) init update subscriptions))
