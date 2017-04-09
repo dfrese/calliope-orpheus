@@ -1,19 +1,20 @@
 (ns dfrese.calliope.orpheus
-  (:require [dfrese.calliope.app :as app]
+  (:require [dfrese.calliope.core :as core]
+            [dfrese.calliope.ext :as ext]
             [dfrese.orpheus.core :as orpheus]
             [dfrese.orpheus.patch :as patch]))
 
 (defrecord ^:no-doc OrpheusCanvas
   [view]
-  app/ICanvas
-  (init-canvas! [this element]
+  ext/ICanvas
+  (-init-canvas! [this element]
     ;; try to lift the current dom structure as vdom properties (gives
     ;; smooth first update if the html already matches the initial vdom)
     (patch/lift element))
-  (update-canvas! [this state element model msg-callback]
+  (-update-canvas! [this state element model msg-callback]
     (patch/patch! state element (view model)
                   {:dispatch! msg-callback}))
-  (finish-canvas! [this state element]
+  (-finish-canvas! [this state element]
     (patch/patch! state element {}
                   {})))
 
@@ -40,4 +41,4 @@
   element, or one or more virtual dom elements to be used as the
   children of that."
   [init view update subscriptions]
-  (app/app (canvas view) init update subscriptions))
+  (core/app (canvas view) init update subscriptions))
