@@ -1,6 +1,7 @@
 (ns dfrese.calliope.orpheus-test
   (:require #?@(:cljs [[cljs.test :refer-macros [deftest is testing]]
                        ;;[dfrese.orpheus.core :as core :include-macros true]
+                       [dfrese.edomus.virtual :as vdom]
                        ])
             #?@(:clj [[clojure.test :refer [deftest is testing]]
                       [dfrese.edomus.virtual :as vdom]])
